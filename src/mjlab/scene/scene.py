@@ -189,6 +189,11 @@ class Scene:
       sensor.update(dt)
 
   def write_data_to_sim(self) -> None:
+    """Evaluate controls for one physics substep in all entities/worlds.
+
+    Stateful actuators and command delays advance here. Reset/state writers
+    update simulation data directly and must not call this as a flush.
+    """
     for ent in self._entities.values():
       ent.write_data_to_sim()
 

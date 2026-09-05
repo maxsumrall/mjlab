@@ -358,10 +358,13 @@ class ManagerBasedRlEnv:
     del options  # Unused.
     if env_ids is None:
       env_ids = torch.arange(self.num_envs, dtype=torch.int64, device=self.device)
+    if env_ids.numel() == 0:
+      return self.obs_buf, self.extras
     if seed is not None:
       self.seed(seed)
     self._reset_idx(env_ids)
-    self.scene.write_data_to_sim()
+    # Reset/state writers already update sim data. Evaluating controls here
+    # would advance stateful actuators without a physics step, in every world.
     self.sim.forward()
     self.command_manager.compute(dt=0.0)
     self.sim.sense()
@@ -438,7 +441,6 @@ class ManagerBasedRlEnv:
     if self.cfg.auto_reset and len(reset_env_ids) > 0:
       self.recorder_manager.record_pre_reset(reset_env_ids)
       self._reset_idx(reset_env_ids)
-      self.scene.write_data_to_sim()
 
     # Single forward() call: recompute derived quantities from current
     # qpos/qvel for every env. For non-reset envs this resolves the

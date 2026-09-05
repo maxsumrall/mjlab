@@ -808,10 +808,11 @@ class Entity:
       act.update(dt)
 
   def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
-    """Zero actuator targets and reset actuator internal state.
+    """Zero owned controls/targets and reset actuator state in the selected worlds.
 
     Called by the scene when environments are reset at episode boundaries,
     and by commands that teleport the robot to a new pose mid-episode.
+    Does not evaluate actuators or advance their delay histories.
     """
     self._data.clear_state(env_ids)
 
@@ -832,6 +833,9 @@ class Entity:
 
     Called before each ``sim.step()`` within the decimation loop. Builtin actuators are
     applied in a single batched operation; custom actuators are applied individually.
+    This advances stateful actuators and command delays by one control evaluation.
+    Do not call it to flush a reset or teleport; state writers update sim data
+    directly. Use ``write_ctrl_to_sim`` for a low-level write without evaluation.
     """
     self._apply_actuator_controls()
 
